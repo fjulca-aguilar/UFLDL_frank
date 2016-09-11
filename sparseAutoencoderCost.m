@@ -38,37 +38,42 @@ b2grad = zeros(size(b2));
 % [(1/m) \Delta W^{(1)} + \lambda W^{(1)}] in the last block of pseudo-code in Section 2.2 
 % of the lecture notes (and similarly for W2grad, b1grad, b2grad).
 % 
-% Stated differently, if we were using batch gradient descent to optimize the parameters,
+% Stated outputDifferenceerently, if we were using batch gradient descent to optimize the parameters,
 % the gradient descent update to W1 would be W1 := W1 - alpha * W1grad, and similarly for W2, b1, b2. 
 % 
 
-numElements = size(data, 2);
-pa2 = zeros(size(W1grad, 1), 1);
-for x = data(:, 1:numElements)
+% calclation of sparcity_delta
+numSamples = size(data, 2);
+average_activation = zeros(size(W1grad, 1), 1);
+for x = data(:, 1:numSamples)
     a2 = sigmoid(W1 * x + b1);
-    pa2 = pa2 + a2;
+    average_activation = average_activation + a2;
 end
 
-for x = data(:,1:numElements)
-	z1 = W1 * x + b1;
-	a1 = sigmoid(z1);
-	z2 = W2 * a1 + b2;
+average_activation = average_activation / numSamples;
+sparcity_delta = - (sparsityParam ./ average_activation) + ((1 - sparsityParam) ./ (1 - average_activation));
+
+% calculation of gradients and cost
+for x = data(:,1:numSamples)
+	z2 = W1 * x + b1;
 	a2 = sigmoid(z2);
-	diff = a2 - x;
-	cost = cost + diff' * diff;
-	gradW3x = -(x - a2) .* (a2 .* (1 - a2));
-	gradW2x = ((W2' * gradW3x) + beta * (- (sparsityParam ./ pa2) + ((1 - sparsityParam) ./ (1 - pa2)))) .* (a1 .* (1 - a1));
-	W2grad = W2grad + gradW3x * a1';
-	W1grad = W1grad + gradW2x * x';
-	b2grad = b2grad + gradW3x;
-	b1grad = b1grad + gradW2x;
+	z3 = W2 * a2 + b2;
+	a3 = sigmoid(z3);
+	outputDifference = x - a3;
+	cost = cost + outputDifference' * outputDifference;
+	delta3 = - outputDifference .* (a3 .* (1 - a3));
+	delta2 = ((W2' * delta3) + beta * sparcity_delta) .* (a2 .* (1 - a2));
+	W2grad = W2grad + delta3 * a2';
+	W1grad = W1grad + delta2 * x';
+	b2grad = b2grad + delta3;
+	b1grad = b1grad + delta2;
 end
 
-cost = cost / (2 * numElements);
-W2grad = (W2grad / numElements) + lambda * W2;
-W1grad = (W1grad / numElements) + lambda * W1;
-b2grad = b2grad / numElements;
-b1grad = b1grad / numElements;
+cost = cost / (2 * numSamples);
+W2grad = (W2grad / numSamples) + lambda * W2;
+W1grad = (W1grad / numSamples) + lambda * W1;
+b2grad = b2grad / numSamples;
+b1grad = b1grad / numSamples;
 
 %-------------------------------------------------------------------
 % After computing the cost and gradient, we will convert the gradients back

@@ -44,7 +44,7 @@ b2grad = zeros(size(b2));
 
 numElements = size(data, 2);
 b1_repmat = repmat(b1, 1, numElements);
-pa2 = sum(sigmoid(W1 * data + b1_repmat), 2);
+pa2 = sum(sigmoid(W1 * data + b1_repmat), 2) / numElements;
 
 b2_repmat = repmat(b2, 1, numElements);
 z2 = W1 * data + b1_repmat;
