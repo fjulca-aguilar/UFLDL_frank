@@ -38,54 +38,36 @@ b2grad = zeros(size(b2));
 % [(1/m) \Delta W^{(1)} + \lambda W^{(1)}] in the last block of pseudo-code in Section 2.2 
 % of the lecture notes (and similarly for W2grad, b1grad, b2grad).
 % 
-% Stated differently, if we were using batch gradient descent to optimize the parameters,
+% Stated outputDifferenceerently, if we were using batch gradient descent to optimize the parameters,
 % the gradient descent update to W1 would be W1 := W1 - alpha * W1grad, and similarly for W2, b1, b2. 
 % 
 
-numElements = size(data, 2);
-b1_repmat = repmat(b1, 1, numElements);
-pa2 = sum(sigmoid(W1 * data + b1_repmat), 2) / numElements;
+numSamples = size(data, 2);
+b1_repmat = repmat(b1, 1, numSamples);
+average_activation = sum(sigmoid(W1 * data + b1_repmat), 2) / numSamples;
+sparcity_delta = - (sparsityParam ./ average_activation) + ((1 - sparsityParam) ./ (1 - average_activation));
+sparcity_delta_repmat = repmat(sparcity_delta , 1, numSamples);
 
-b2_repmat = repmat(b2, 1, numElements);
+b2_repmat = repmat(b2, 1, numSamples);
 z2 = W1 * data + b1_repmat;
 a2 = sigmoid(z2);
 z3 = W2 * a2 + b2_repmat;
 a3 = sigmoid(z3);
-diff = data - a3;
-diff_square = diff .* diff;
-cost = sum(diff_square(:));
-delta3 = - diff .* (a3 .* (1 - a3));
-delta2 = ((W2' * delta3)) .* (a2 .* (1 - a2));
+outputDifference = data - a3;
+outputDifference_square = outputDifference .* outputDifference;
+cost = sum(outputDifference_square(:)) / (2 * numSamples);
+delta3 = - outputDifference .* (a3 .* (1 - a3));
+delta2 = ((W2' * delta3) + beta * sparcity_delta_repmat) .* (a2 .* (1 - a2));
 W2grad = delta3 * a2';
 W1grad = delta2 * data';
 b2grad = sum(delta3, 2);
 b1grad = sum(delta2, 2);
 
+W2grad = (W2grad / numSamples) + lambda * W2;
+W1grad = (W1grad / numSamples) + lambda * W1;
+b2grad = b2grad / numSamples;
+b1grad = b1grad / numSamples;
 
-% for x = data(:,1:numElements)
-% 	z1 = W1 * x + b1;
-% 	a1 = sigmoid(z1);
-% 	z2 = W2 * a1 + b2;
-% 	a2 = sigmoid(z2);
-% 	diff = a2 - x;
-% 	cost = cost + diff' * diff;
-% 	gradW3x = -(x - a2) .* (a2 .* (1 - a2));
-% 	gradW2x = ((W2' * gradW3x) + beta * (- (sparsityParam ./ pa2) + ((1 - sparsityParam) ./ (1 - pa2)))) .* (a1 .* (1 - a1));
-% 	W2grad = W2grad + gradW3x * a1';
-% 	W1grad = W1grad + gradW2x * x';
-% 	b2grad = b2grad + gradW3x;
-% 	b1grad = b1grad + gradW2x;
-% end
-
-cost = cost / (2 * numElements);
-W2grad = (W2grad / numElements) + lambda * W2;
-W1grad = (W1grad / numElements) + lambda * W1;
-b2grad = b2grad / numElements;
-b1grad = b1grad / numElements;
-%size(W1grad)
-%size(W2grad)
-%size(b1grad)
-%size(b2grad)
 %-------------------------------------------------------------------
 % After computing the cost and gradient, we will convert the gradients back
 % to a vector format (suitable for minFunc).  Specifically, we will unroll
