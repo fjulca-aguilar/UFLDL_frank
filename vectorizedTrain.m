@@ -85,8 +85,6 @@ numgrad = computeNumericalGradient( @(x) vectorizedSparseAutoencoderCost(x, visi
                                                   patches), theta);
 
 % Use this to visually compare the gradients side by side
-size(numgrad)
-size(grad)
 disp([numgrad grad]); 
 
 % Compare numerically computed gradients with the ones obtained from backpropagation
