@@ -1,4 +1,4 @@
-%images = loadMNISTImages('MNIST/train-images-idx3-ubyte');
+images = loadMNISTImages('MNIST/train-images-idx3-ubyte');
 %labels = loadMNISTLabels('MNIST/train-labels-idx1-ubyte');
  
 % We are using display_network from the autoencoder code
@@ -14,7 +14,7 @@ lambda = 3e-3;     % weight decay parameter
 beta = 3;            % weight of sparsity penalty term       
 
 
-patches = sampleIMAGES; %images(:,1:10000);
+patches = images(:,1:10000);
 
 %  Obtain random parameters theta
 theta = initializeParameters(hiddenSize, visibleSize);
